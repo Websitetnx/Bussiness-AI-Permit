@@ -1,0 +1,72 @@
+name: Permit operations tests
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: test-password-only
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -ptest-password-only"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_NAME: permit_test_operations
+      DB_USER: root
+      DB_PASS: test-password-only
+      APP_URL: https://permits.example.test
+      OPENAI_API_KEY: ''
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.0'
+          extensions: pdo_mysql, pdo_sqlite, mbstring, zip, curl, fileinfo
+          tools: composer:v2
+      - run: composer install --no-interaction --prefer-dist
+      - name: PHP syntax
+        run: find . -path ./vendor -prune -o -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Existing regression tests
+        run: |
+          result=0
+          for test in tests/environment_test.php tests/auth_otp_test.php tests/auto_scan_rules_test.php tests/document_validation_email_test.php tests/treasurer_permissions_test.php tests/business_certificate_test.php tests/motion_system_test.php tests/layer_separation_test.php; do
+            php "$test" || result=1
+          done
+          exit "$result"
+      - name: Prepare isolated databases and verify upgrade migration
+        id: database
+        if: ${{ !cancelled() }}
+        env:
+          MYSQL_PWD: test-password-only
+        run: |
+          mysql -h127.0.0.1 -uroot -e 'CREATE DATABASE permit_test_operations; CREATE DATABASE permit_test_restore; CREATE DATABASE permit_test_upgrade;'
+          sed -e '/^CREATE DATABASE IF NOT EXISTS permitflow/,+2d' -e '/^USE permitflow;/d' database/schema.sql | mysql -h127.0.0.1 -uroot permit_test_operations
+          git show 099fd691e0147ecde59e08d0ba73ff072d8f13f6:database/schema.sql | sed -e '/^CREATE DATABASE IF NOT EXISTS permitflow/,+2d' -e '/^USE permitflow;/d' | mysql -h127.0.0.1 -uroot permit_test_upgrade
+          mysql -h127.0.0.1 -uroot permit_test_upgrade < database/migrations/008_operations.sql
+      - name: Page routes, uploads, and manual scans
+        run: php tests/reupload_document_http_test.php
+        if: ${{ !cancelled() && steps.database.outcome == 'success' }}
+      - name: Permit terms and installment migration / accounting
+        run: php tests/permit_installments_test.php
+        if: ${{ !cancelled() && steps.database.outcome == 'success' }}
+      - run: php tests/operations_integration_test.php
+        id: operations
+        if: ${{ !cancelled() && steps.database.outcome == 'success' }}
+      - run: php tests/operations_http_test.php
+        if: ${{ !cancelled() && steps.operations.outcome == 'success' }}
+      - name: QR round trip
+        if: ${{ !cancelled() }}
+        run: |
+          npm install --prefix "$RUNNER_TEMP/permit-qr-tests" jsqr@1.4.0
+          QR_DECODER_PATH="$RUNNER_TEMP/permit-qr-tests/node_modules/jsqr" node tests/qr_test.cjs

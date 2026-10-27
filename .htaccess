@@ -1,0 +1,21 @@
+Options -Indexes
+DirectoryIndex index.php
+
+# Keep previously published static asset URLs working after the layer split.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^(app\.js|styles\.css)$ frontend/assets/$1 [L]
+  RewriteRule ^assets/(chatbot\.js|permit-qr\.js|logo(?:-light)?\.png|vendor/qrcode(?:\.js|-LICENSE\.txt))$ frontend/assets/$1 [L]
+</IfModule>
+
+# Block secrets and private exports, including editor/backup copies of .env.
+<FilesMatch "(?i)^(?:\..*|config(?:\..*)?\.php(?:[.~].*)?|.*\.(?:sql(?:\.(?:gz|zip))?|dump|log|pem|key|p12|pfx)|.*\.backup\.zip)$">
+  Require all denied
+</FilesMatch>
+
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Referrer-Policy "same-origin"
+  Header always set Permissions-Policy "geolocation=(self)"
+</IfModule>

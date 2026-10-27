@@ -1,0 +1,33 @@
+{
+  "name": "permit-mobile",
+  "version": "1.0.0",
+  "private": true,
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test tests/*.test.ts"
+  },
+  "dependencies": {
+    "expo": "~55.0.0",
+    "expo-build-properties": "~55.0.18",
+    "expo-document-picker": "~55.0.17",
+    "expo-file-system": "~55.0.26",
+    "expo-location": "~55.1.14",
+    "expo-print": "~55.0.19",
+    "expo-secure-store": "~55.0.18",
+    "expo-sharing": "~55.0.24",
+    "expo-status-bar": "~55.0.6",
+    "qrcode-generator": "^2.0.4",
+    "react": "19.2.0",
+    "react-native": "0.83.10",
+    "react-native-safe-area-context": "~5.6.2",
+    "react-native-svg": "15.15.3"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.0",
+    "typescript": "~5.9.2"
+  }
+}

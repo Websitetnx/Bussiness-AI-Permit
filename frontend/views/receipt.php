@@ -1,0 +1,12 @@
+<?php
+declare(strict_types=1);
+if (!defined('PERMIT_ENTRY')) {
+    http_response_code(404);
+    exit;
+}
+render_app_header('Payment Receipt', 'payments');
+?>
+<div class="receipt-toolbar"><a class="button button-secondary" href="<?= e(url($canManagePayments ? 'admin/payment.php?id=' . ($payment['payment_id']??$payment['id']) : 'payments.php')) ?>">← Back</a><button class="button" type="button" onclick="window.print()">Print receipt</button></div>
+<?php if($installmentId): ?><p class="panel ops-panel">This receipt covers <?= e($payment['label']) ?> only: PHP <?= e($payment['amount']) ?>, due <?= e($payment['due_date']) ?>. Annual assessment: PHP <?= e($payment['annual_assessment']) ?>. It does not certify payment of other installments.</p><?php endif; ?>
+<article class="panel receipt-card"><header><img src="<?= e(url('frontend/assets/logo-light.png')) ?>" alt="PERMIT"><div><p>City Government Services</p><h2>Permit Payment Receipt</h2><span><?= e($payment['receipt_number']) ?></span></div></header><div class="receipt-paid">PAID</div><dl><div><dt>Application reference</dt><dd><?= e($payment['application_reference']) ?></dd></div><div><dt>Permit number</dt><dd><?= e($payment['permit_number'] ?: 'Pending release') ?></dd></div><div><dt>Business</dt><dd><?= e($payment['business_name']) ?></dd></div><div><dt>Applicant</dt><dd><?= e($payment['applicant_name']) ?></dd></div><div><dt>Payer</dt><dd><?= e($payment['payer_name']) ?></dd></div><div><dt>Payment method</dt><dd><?= e($payment['payment_method']) ?></dd></div><div><dt>Payment reference</dt><dd><?= e($payment['payment_reference']) ?></dd></div><div><dt>Date verified</dt><dd><?= e(date('F j, Y g:i A', strtotime($payment['paid_at']))) ?></dd></div></dl><?php if ($feeBreakdown): ?><div class="receipt-breakdown"><strong>Assessment breakdown</strong><dl><?php foreach ($feeBreakdown['components'] as $component): ?><div><dt><?= e($component['label']) ?></dt><dd>₱<?= e(number_format((float) $component['amount'], 2)) ?></dd></div><?php endforeach; ?></dl></div><?php endif; ?><dl><div class="receipt-total"><dt>Amount paid</dt><dd>₱<?= e(number_format((float) $payment['amount'], 2)) ?></dd></div></dl><footer><p>Verified by <?= e($payment['verified_by_name'] ?: 'Authorized administrator') ?>.</p><small>This system-generated receipt confirms the payment recorded in PERMIT. Retain it with any official City Treasurer receipt.</small></footer></article>
+<?php render_app_footer(); ?>

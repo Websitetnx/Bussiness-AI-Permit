@@ -1,0 +1,60 @@
+export type NativeNode = {
+  key: string;
+  kind: 'text' | 'group' | 'form' | 'field' | 'button' | 'link' | 'table' | 'details' | 'qr';
+  children?: NativeNode[];
+  text?: string;
+  tone?: string;
+  href?: string;
+  method?: string;
+  action?: string;
+  type?: string;
+  name?: string;
+  label?: string;
+  value?: string;
+  placeholder?: string;
+  required?: boolean;
+  disabled?: boolean;
+  readonly?: boolean;
+  checked?: boolean;
+  skipValidation?: boolean;
+  maxLength?: number | null;
+  minLength?: number | null;
+  inputMode?: string;
+  accept?: string;
+  options?: { label: string; value: string; disabled: boolean }[];
+  headers?: string[];
+  rows?: NativeNode[][][];
+};
+
+export type User = { id: number; name: string; email: string; role: string };
+export type Screen = {
+  title: string;
+  navigation: { label: string; href: string }[];
+  messages: string[];
+  nodes: NativeNode[];
+};
+export type Envelope = {
+  ok: boolean;
+  version: number;
+  route: string;
+  session?: string;
+  csrf?: string;
+  user: User | null;
+  redirect?: string;
+  messages?: { type: string; message: string }[];
+  screen?: Screen;
+  error?: string;
+  data?: Record<string, unknown>;
+};
+export type Upload = { uri: string; name: string; type: string; size?: number };
+export type FieldValue = string | boolean | Upload;
+export type Values = Record<string, FieldValue>;
+export type Entry = [string, string | Upload];
+export type Notice = {
+  id: number;
+  message: string;
+  is_read: boolean;
+  time_ago: string;
+  detail_url: string | null;
+  action_label: string;
+};

@@ -1,0 +1,4 @@
+# Templates are server-side includes; only browser assets are public.
+<FilesMatch "\.php$">
+  Require all denied
+</FilesMatch>

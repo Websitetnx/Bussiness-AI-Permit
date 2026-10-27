@@ -1,0 +1,18 @@
+<?php
+declare(strict_types=1);
+if (!defined('PERMIT_ENTRY')) {
+    http_response_code(404);
+    exit;
+}
+render_app_header('LGU Administration', 'admin-dashboard');
+?>
+<div class="section-heading"><div><p class="eyebrow">BPLO workspace</p><h2>Application overview</h2><p class="muted">Review submissions, record decisions, and manage administrator accounts.</p></div><a class="button" href="users.php">Manage accounts</a></div>
+<div class="stat-grid"><article class="stat-card"><span>▤</span><strong><?= (int) ($stats['total'] ?? 0) ?></strong><small>Total applications</small></article><article class="stat-card"><span>◷</span><strong><?= (int) ($stats['for_review'] ?? 0) ?></strong><small>Pending review</small></article><article class="stat-card"><span>!</span><strong><?= (int) ($stats['needs_revision'] ?? 0) ?></strong><small>For revision</small></article><article class="stat-card"><span>✓</span><strong><?= (int) ($stats['approved'] ?? 0) ?></strong><small>Approved / released</small></article></div>
+<div class="content-grid staff-grid"><article class="panel"><div class="panel-header"><div><p class="eyebrow">Processing health</p><h3>Applications by stage</h3></div></div><div class="bar-chart"><?php foreach ([1 => 'Submitted', 2 => 'Validation', 3 => 'Assessment', 4 => 'Release'] as $stage => $label): $count = (int) ($stageCounts[$stage] ?? 0); ?><div class="bar-row"><span><?= e($label) ?></span><div class="bar-track"><div class="bar-fill" style="width:<?= max($count ? 8 : 0, round($count / $total * 100)) ?>%"></div></div><strong><?= $count ?></strong></div><?php endforeach; ?></div></article><aside class="panel"><div class="panel-header"><div><p class="eyebrow">Access control</p><h3>Protected administration</h3></div></div><div class="admin-security"><span>◆</span><p><strong>Administrator session active</strong><br><span class="muted">Applicants cannot open this workspace or create administrator roles.</span></p></div></aside></div>
+
+<div class="section-heading" id="queue"><div><p class="eyebrow">Application management</p><h2>Review queue</h2></div></div>
+<div class="panel table-panel"><form method="get" class="table-toolbar"><label class="search-field"><span>⌕</span><input type="search" name="q" value="<?= e($search) ?>" placeholder="Search business, applicant, or reference"></label><select name="status" onchange="this.form.submit()" aria-label="Filter by status"><?php foreach ($allowedStatuses as $option): ?><option value="<?= e($option) ?>" <?= $status === $option ? 'selected' : '' ?>><?= e($option === 'all' ? 'All statuses' : $option) ?></option><?php endforeach; ?></select><button class="button button-secondary" type="submit">Search</button></form><div class="table-wrap"><table><thead><tr><th>Reference</th><th>Business</th><th>Applicant</th><th>Application</th><th>Submitted</th><th>Status</th><th></th></tr></thead><tbody>
+<?php foreach ($queueRows as $application): ?><tr><td><strong><?= e($application['reference']) ?></strong><small><?= e($application['permit_number'] ?: 'Pending permit no.') ?></small></td><td><strong><?= e($application['business_name']) ?></strong></td><td><?= e($application['owner_name']) ?></td><td><?= e($application['application_type']) ?></td><td><?= e(date('M j, Y', strtotime($application['submitted_at']))) ?></td><td><span class="status <?= e(status_class($application['status'])) ?>"><?= e($application['status']) ?></span></td><td><a class="table-action" href="review.php?id=<?= (int) $application['id'] ?>">Review →</a></td></tr><?php endforeach; ?>
+<?php if ($queue->rowCount() === 0): ?><tr><td colspan="7" class="empty-state">No matching applications.</td></tr><?php endif; ?>
+</tbody></table></div></div>
+<?php render_app_footer(); ?>

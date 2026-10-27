@@ -1,0 +1,12 @@
+# Allow browser access to profile pictures only
+Require all granted
+
+# Only serve image files
+<FilesMatch "\.(jpg|jpeg|png|webp)$">
+  Require all granted
+</FilesMatch>
+
+# Block everything else
+<FilesMatch "\.php$">
+  Require all denied
+</FilesMatch>
